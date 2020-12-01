@@ -1,4 +1,4 @@
-# Kubespray Installation Report
+# Kubespray Installation Feedback
 In this report, I will be listing the steps during the [SLATE cluster installation with Kubespray](https://slateci.io/docs/cluster/install-kubernetes-with-kubespray.html) in which I got stuck on. I used 2 VMs for the test installation. Below are the names I used to describe these 2 VMs: 
 - host machine: the VM on which the cluster will be installed
 - deployment machine: the VM on which I ran the installation procedure and install the cluster to the host machine
@@ -26,4 +26,27 @@ In this report, I will be listing the steps during the [SLATE cluster installati
         TASK [registration : Register cluster with SLATE] ****************************************************************************************************************************************************************************
         fatal: [li-zhang-training]: FAILED! => {"changed": false, "msg": "async task did not complete within the requested time - 180s"}
         ```
-    - This error is still unresolved. Emerson suggested running slate cluster create command manually on the host machine. I got stuck on figuring out the manual procedure test test
+    - This error is caused by the setting of `MetalLB` in `addons.yml`. I previously set it up as the IP of the host machine `128.135.235.190/24`. However, MetalLB requires an entirely different IP address than the one on host machine. When I give it `128.135.235.190/24`, it either fails because it’s not in standard CIDR format or it’ll try using any IP address in the `128.135.235.0/24` subnet.
+    - I can either setup the `metallb_ip_range` as `128.135.235.0/24` or choose not to run with the `MetalLB` setting
+    - the problem was solved by running the following steps:
+        1. reset the cluster
+            ```bash
+            git checkout master && git pull && ansible-playbook -i inventory/lz-kspray-cluster/hosts.yaml --become --become-user=root -u centos reset.yml
+            ```
+        2. switch git branch
+            ```bash
+            git checkout v2.14.2
+            ```
+        3. rerun the K8S cluster creation
+            ```bash
+            ansible-playbook -i inventory/lz-kspray-cluster/hosts.yaml --become --become-user=root -u centos cluster.yml
+
+            ```
+        4. rerun the SLATE cluster creation with the flag to disable the metalLB
+            ```bash
+            ansible-playbook -i ~/kubespray/inventory/lz-kspray-cluster/hosts.yaml -u centos --become --become-user=root \
+            -e 'slate_cli_token=<token>' \
+            -e 'slate_cli_endpoint=https://api.slateci.io:443' \
+            -e 'slate_enable_ingress=false' \
+            site.yml
+            ```
