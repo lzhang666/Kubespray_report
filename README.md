@@ -26,4 +26,4 @@ In this report, I will be listing the steps during the [SLATE cluster installati
         TASK [registration : Register cluster with SLATE] ****************************************************************************************************************************************************************************
         fatal: [li-zhang-training]: FAILED! => {"changed": false, "msg": "async task did not complete within the requested time - 180s"}
         ```
-    - This error is still unresolved. Emerson suggested running slate cluster create command manually on the host machine. I got stuck on figuring out the manual procedure
+    - This error is still unresolved. Emerson suggested running slate cluster create command manually on the host machine. I got stuck on figuring out the manual procedure test test
